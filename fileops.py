@@ -9,7 +9,7 @@ ERROR_INVALID_NAME = 123
 
 
 def get_image_files(path):
-    types = ('*.jpg', '*.JPG', '*.jpeg', '*.JPEG', '*.png', '*.PNG' '*.webp', '*.WEBP')
+    types = ('*.jpg', '*.JPG', '*.jpeg', '*.JPEG', '*.png', '*.PNG', '*.webp', '*.WEBP')
     filepaths = []
     filenames = []
     for t in types:

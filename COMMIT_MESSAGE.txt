@@ -1,0 +1,25 @@
+feat: Add exact dimension crop feature and fix bugs
+
+This update adds the ability to crop images at exact output dimensions,
+making it easier to create datasets with consistent image sizes.
+
+New Features:
+- Added option to use output width/height as the target crop resolution
+- Modified rectangle drawing logic to maintain output dimensions ratio
+- Updated UI controls to reflect the new cropping behavior
+
+Bug Fixes:
+- Fixed missing comma in PNG extension pattern
+- Fixed incorrect label for output height entry
+- Updated deprecated Image.ANTIALIAS to Image.Resampling.LANCZOS
+- Updated yaml.load to yaml.safe_load for security
+- Fixed mouse initialization in VideoTab
+- Updated requirements.txt with specific versions
+- Fixed typo in error messages
+
+Project Maintenance:
+- Added proper .gitignore file
+- Updated README with new feature documentation
+- Updated LICENSE with current year
+- Added CHANGELOG.md for version tracking
+- Updated version to 1.1.0

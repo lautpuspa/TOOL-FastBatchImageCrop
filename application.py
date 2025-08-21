@@ -18,9 +18,9 @@ class Application(tk.Tk):
     def __init__(self, geometry):
         super().__init__()
         self.geometry(geometry)
-        self.title('Fast Batch Image Crop')
+        self.title('Fast Batch Image Crop v1.1.0')
         self.init_ui()
-        self.console.write_info('Application init complete.')
+        self.console.write_info('Application v1.1.0 init complete.')
 
     
     def init_ui(self):

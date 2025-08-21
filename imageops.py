@@ -15,11 +15,11 @@ def resize_image(image: Image, width=None, height=None):
     elif width is None and height is not None:
         width = image.width * height // image.height
     elif height is None and width is None:
-        raise RuntimeError("At lease one of width and height must be present")
-    return image.resize((width, height), Image.ANTIALIAS)
+        raise RuntimeError("At least one of width and height must be present")
+    return image.resize((width, height), Image.Resampling.LANCZOS)
     
 def rotate_image(image, angle):
-        return image.rotate(angle, Image.BICUBIC, expand=True)
+        return image.rotate(angle, Image.Resampling.BICUBIC, expand=True)
 
 def scale_image(image: Image, ratio=None):
-    return image.resize((int(image.width * ratio), int(image.height * ratio)), Image.ANTIALIAS)
+    return image.resize((int(image.width * ratio), int(image.height * ratio)), Image.Resampling.LANCZOS)

@@ -114,7 +114,7 @@ class ImagesetTab(tk.Frame):
         parameters_frame.grid(column=0, row=1, sticky='news')
         parameters_frame.columnconfigure(0, weight=1)
 
-        self.scale_output_checkbox = ui.CheckBox('Scale Output', self.scale_output_checkbox_callback, parameters_frame)
+        self.scale_output_checkbox = ui.CheckBox('Use Output Dimensions for Crop', self.scale_output_checkbox_callback, parameters_frame)
         self.scale_output_checkbox.grid(column=0, row=0, sticky='news')
 
         self.roll_on_crop_checkbox = ui.CheckBox('Roll On Crop', None, parameters_frame)
@@ -124,7 +124,7 @@ class ImagesetTab(tk.Frame):
         self.output_width_entry.grid(column=0, row=2, sticky='news')
         self.output_width_entry.set_value(DEFAULT_OUTPUT_WIDTH)
 
-        self.output_height_entry = ui.LabelEntryInt('Output Width', parameters_frame)
+        self.output_height_entry = ui.LabelEntryInt('Output Height', parameters_frame)
         self.output_height_entry.grid(column=0, row=3, sticky='news')
         self.output_height_entry.set_value(DEFAULT_OUTPUT_HEIGHT)
 
@@ -199,9 +199,17 @@ class ImagesetTab(tk.Frame):
         if value == 1:
             self.output_height_entry.enable()
             self.output_width_entry.enable()
+            self.crop_aspect_x_entry.disable()
+            self.crop_aspect_y_entry.disable()
+            # Update the rectangle to match output dimensions
+            if self.current_image is not None:
+                self.move_rectangle()
         else:
-            self.output_height_entry.disable()
-            self.output_width_entry.disable()
+            self.crop_aspect_x_entry.enable()
+            self.crop_aspect_y_entry.enable()
+            # Rectangle size will be controlled by aspect ratio and mousewheel
+            if self.current_image is not None:
+                self.move_rectangle()
 
     def set_files_to_listbox(self, path):
         self.output_path_entry.set_value(path + '/out')
@@ -219,9 +227,24 @@ class ImagesetTab(tk.Frame):
         self.console.write_info('Found ' + str(len(self.input_files)) + ' image(s).')
 
     def move_rectangle(self):
-        rect_aspect_ratio = self.crop_aspect_y_entry.get_value() / self.crop_aspect_x_entry.get_value()
-        rect_half_x = self.current_crop_rect_multiplier_step * CROP_RECT_MULTIPLIER / 2
-        rect_half_y = int(rect_half_x * rect_aspect_ratio)
+        # Use output width/height for the rectangle dimensions
+        output_width = self.output_width_entry.get_value()
+        output_height = self.output_height_entry.get_value()
+        
+        # Calculate the rectangle size based on the current image scale ratio
+        if self.ratio and self.scaled_image:
+            # Calculate the rectangle size in canvas coordinates
+            rect_width = output_width * self.ratio
+            rect_height = output_height * self.ratio
+            
+            rect_half_x = rect_width / 2
+            rect_half_y = rect_height / 2
+        else:
+            # Fallback to aspect ratio if no image is loaded
+            rect_aspect_ratio = self.crop_aspect_y_entry.get_value() / self.crop_aspect_x_entry.get_value()
+            rect_half_x = self.current_crop_rect_multiplier_step * CROP_RECT_MULTIPLIER / 2
+            rect_half_y = int(rect_half_x * rect_aspect_ratio)
+        
         canvas_half_x = self.image_canvas.winfo_width() / 2
         canvas_half_y = self.image_canvas.winfo_height() / 2
 
@@ -300,13 +323,27 @@ class ImagesetTab(tk.Frame):
                                                               self.image_canvas.winfo_height() / 2, anchor=tk.CENTER,
                                                               image=self.current_image)
 
-        rect_ratio = self.crop_aspect_y_entry.get_value() / self.crop_aspect_x_entry.get_value()
-        rect_x = self.current_crop_rect_multiplier_step * CROP_RECT_MULTIPLIER
-        rect_y = rect_x * rect_ratio
-        self.rectangle_container = self.image_canvas.create_rectangle(self.current_mouse_x - rect_x/2, 
-                                                                      self.current_mouse_y - rect_y/2,
-                                                                      self.current_mouse_x + rect_x/2,
-                                                                      self.current_mouse_y + rect_y/2,
+        # Create initial rectangle based on output dimensions or aspect ratio
+        if self.scale_output_checkbox.get_value() == 1:
+            # Use output dimensions for the rectangle
+            rect_width = self.output_width_entry.get_value() * self.ratio
+            rect_height = self.output_height_entry.get_value() * self.ratio
+            
+            rect_half_x = rect_width / 2
+            rect_half_y = rect_height / 2
+        else:
+            # Use aspect ratio for the rectangle
+            rect_ratio = self.crop_aspect_y_entry.get_value() / self.crop_aspect_x_entry.get_value()
+            rect_x = self.current_crop_rect_multiplier_step * CROP_RECT_MULTIPLIER
+            rect_y = rect_x * rect_ratio
+            
+            rect_half_x = rect_x / 2
+            rect_half_y = rect_y / 2
+            
+        self.rectangle_container = self.image_canvas.create_rectangle(self.current_mouse_x - rect_half_x, 
+                                                                      self.current_mouse_y - rect_half_y,
+                                                                      self.current_mouse_x + rect_half_x,
+                                                                      self.current_mouse_y + rect_half_y,
                                                                       outline='white', width=3)
         self.move_rectangle()
 
@@ -338,7 +375,9 @@ class ImagesetTab(tk.Frame):
         self.unbind_all('r')
 
     def canvas_mousewheel(self, event):
-        if self.current_image is not None:
+        # Mouse wheel now only affects the crop when not using direct dimensions
+        # When using output dimensions, the rectangle size is fixed
+        if self.scale_output_checkbox.get_value() == 0 and self.current_image is not None:
             if event.num == 4 or event.delta == -120:
                 rect_ratio = self.crop_aspect_y_entry.get_value() / self.crop_aspect_x_entry.get_value()
                 new_multiplier_step = self.current_crop_rect_multiplier_step + 1
@@ -359,8 +398,24 @@ class ImagesetTab(tk.Frame):
         box_rel_tl_y = self.current_rect_upper - ((self.current_canvas_size_y - self.scaled_image.height) / 2)
         box_rel_bl_x = box_rel_tl_x + (self.current_rect_right - self.current_rect_left)
         box_rel_bl_y = box_rel_tl_y + (self.current_rect_lower - self.current_rect_upper)
+        
         # get rect data and crop image
-        return iops.crop_image(self.raw_image, self.ratio, (box_rel_tl_x, box_rel_tl_y, box_rel_bl_x, box_rel_bl_y))
+        cropped_image = iops.crop_image(self.raw_image, self.ratio, (box_rel_tl_x, box_rel_tl_y, box_rel_bl_x, box_rel_bl_y))
+        
+        # If scale_output is checked, we're already cropping at the target resolution
+        # so we don't need to resize in canvas_mouseclick
+        if self.scale_output_checkbox.get_value() == 1:
+            # Check if the cropped dimensions match our target dimensions
+            width_diff = abs(cropped_image.width - self.output_width_entry.get_value())
+            height_diff = abs(cropped_image.height - self.output_height_entry.get_value())
+            
+            # If there's a small rounding difference (less than 2 pixels), resize to exact dimensions
+            if width_diff <= 2 or height_diff <= 2:
+                cropped_image = iops.resize_image(cropped_image, 
+                                                 width=self.output_width_entry.get_value(),
+                                                 height=self.output_height_entry.get_value())
+        
+        return cropped_image
 
     def toggle_roll(self, event):
         self.roll_on_crop_checkbox.set_value(not self.roll_on_crop_checkbox.get_value())
@@ -423,9 +478,7 @@ class ImagesetTab(tk.Frame):
 
         # take coordinates and crop
         cropped_image = self.get_image_inside_rectangle()
-        if self.scale_output_checkbox.get_value():
-            cropped_image = iops.resize_image(cropped_image, height=self.output_height_entry.get_value(),
-                                              width=self.output_width_entry.get_value())
+        # The resizing is now handled in get_image_inside_rectangle if needed
 
         output_image_name = self.input_files[self.current_image_index][0].split('.')[0] + '_' + str(self.crop_count) + '.png'
         output_image_description_name = self.input_files[self.current_image_index][0].split('.')[0] + '_' + str(self.crop_count) + '.txt'
@@ -482,7 +535,7 @@ class ImagesetTab(tk.Frame):
     class AttributeSelector:
         def __init__(self, file_path):
             with open(file_path, 'r') as f:
-                self.attributes = yaml.load(f, Loader=yaml.FullLoader)
+                self.attributes = yaml.safe_load(f)
     
         def ask_attributes(self):
             top_level = tk.Toplevel()

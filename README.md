@@ -1,36 +1,65 @@
 # TOOL-FastBatchImageCrop
-A simple UI tool to batch crop images to prepare datasets.
+A simple UI tool to batch crop images to prepare datasets with precise dimensions.
 
 
 ![Preview](./mat/preview.gif)
 
 ## Features
 - Crop images from videos and image folders with custom aspect ratios
+- **NEW**: Crop images at exact output dimensions (e.g., 512x512, 1024x768)
 - Resize cropped images automatically
 - Extract frames from videos
-- Crop iamges from videos while playing the video
+- Crop images from videos while playing the video
 - Save cropped images to different class folders
 - Tag images to txt files while cropping
 
 ## Usage
 
-Install requirements (only pillow and opencv) with;
+Install requirements with:
 
->pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
-Run with;
+Run the application with:
 
->python main.py
+```bash
+python main.py
+```
 
-Select input folder, adjust crop rectangle size with mousewheel, click, repeat.
+### Basic Usage
+1. Select input folder
+2. Choose output folder (defaults to input_folder/out)
+3. Select cropping mode:
+   - **Aspect Ratio Mode**: Adjust crop rectangle size with mousewheel
+   - **NEW - Output Dimensions Mode**: Check "Use Output Dimensions for Crop" to crop at exact pixel dimensions
+4. Click on the image to crop
+5. Repeat
 
-There are options to enter class names and image descriptions per crop. Class name creates seperate directories to save in the output folder and image descriptions create txt files with the same names per image.
+### Output Dimensions Mode
+When "Use Output Dimensions for Crop" is checked:
+1. Enter desired width and height in pixels
+2. The crop rectangle will maintain these exact dimensions
+3. Cropped images will have the exact pixel dimensions specified
 
-Shortcut keys when cursor is on canvas;
+### Class Names and Descriptions
+- Enter class names to save crops in separate directories
+- Add image descriptions to create accompanying text files
+- Use the Tag Editor to add specific tags to images
 
-    - q: Rotate image CCW
-    - e: Rotate image CW
-    - r: Toggle roll to next image on crop
-    - space: Roll to next image
+### Shortcut Keys
+When cursor is on canvas:
+- **q**: Rotate image counter-clockwise
+- **e**: Rotate image clockwise
+- **r**: Toggle roll to next image on crop
+- **space**: Roll to next image
 
-Hack away.
+## Requirements
+- Python 3.6+
+- OpenCV
+- Pillow (PIL)
+- PyYAML
+- tkinter
+
+## License
+See LICENSE.md file for details.
