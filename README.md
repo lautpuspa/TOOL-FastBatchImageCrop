@@ -4,6 +4,9 @@ A simple UI tool to batch crop images to prepare datasets with precise dimension
 
 ![Preview](./mat/preview.gif)
 
+## Key Difference Over Original
+**Direct Dimension Cropping:** Unlike the original which only applied dimensions after cropping, this fork allows you to specify and visualize the exact pixel dimensions (e.g., 512×512) of your crop in real-time. The crop rectangle maintains the precise dimensions you need, ensuring consistent dataset images without post-processing distortion.
+
 ## Features
 - Crop images from videos and image folders with custom aspect ratios
 - **NEW**: Crop images at exact output dimensions (e.g., 512x512, 1024x768)
@@ -41,6 +44,8 @@ When "Use Output Dimensions for Crop" is checked:
 1. Enter desired width and height in pixels
 2. The crop rectangle will maintain these exact dimensions
 3. Cropped images will have the exact pixel dimensions specified
+
+**Main Logic Difference:** In the original version, dimensions were only applied after cropping as a scaling operation. This fork modifies the core cropping logic to use your specified dimensions directly for the crop rectangle itself, giving you pixel-perfect crops without distortion.
 
 ### Class Names and Descriptions
 - Enter class names to save crops in separate directories
